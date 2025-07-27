@@ -1,0 +1,34 @@
+name: Train and Evaluate Model
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "0 0 * * 0" # Weekly training at midnight on Sunday
+
+jobs:
+  train:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        pytorch: ["2.2.0+cu118"]
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      - name: Install PyTorch
+        run: |
+          pip install torch==$pytorch torchvision==0.17.0+cu118 torchaudio==2.2.0+cu118 --extra-index-url https://download.pytorch.org/whl/cu118
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+      - name: Train model
+        run: |
+          python train.py
+      - name: Save trained model
+        uses: actions/upload-artifact@v3
+        with:
+          name: trained_model
+          path: checkpoints/
